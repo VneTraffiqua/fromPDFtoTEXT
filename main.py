@@ -1,8 +1,14 @@
 import aspose.words as aw
+import logging
+from environs import Env
+from pathlib import Path
 
 
-def get_text_from_document(path):
-    document = aw.Document(path)
+logger = logging.getLogger(__name__)
+
+
+def get_text_from_document(file):
+    document = aw.Document(file)
     return document.get_text()
 
 
@@ -50,7 +56,24 @@ class Payment:
 
 
 if __name__ == '__main__':
-    document_path = './111.pdf'
-    text = get_text_from_document(document_path)
-    info = get_payment_info(text)
-    print(Payment(*info))
+    logging.basicConfig(
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        level=logging.INFO,
+        filename='working_log.log',
+        filemode='w',
+    )
+
+    env = Env()
+    env.read_env()
+
+    try:
+        documents_path = env.str('DIRECTORY')
+        path_list = Path(documents_path).glob('*.pdf')
+        for file_path in path_list:
+            text = get_text_from_document(str(file_path))
+            info = get_payment_info(text)
+            print(Payment(*info))
+            logger.info(f'{file_path} successful!')
+    except TypeError as err:
+        logger.exception(err)
+
